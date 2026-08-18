@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build APK from Web App
 
 on:
   push:
@@ -13,21 +13,51 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Dependencies and Build Web Assets
+        run: |
+          npm install
+          npm run build --if-present
+
+      - name: Setup Android Wrapper (Capacitor)
+        run: |
+          # Determina a pasta de saída do build (dist, build ou a própria raiz)
+          WEB_DIR="dist"
+          if [ -d "dist" ]; then
+            WEB_DIR="dist"
+          elif [ -d "build" ]; then
+            WEB_DIR="build"
+          elif [ -d "public" ]; then
+            WEB_DIR="public"
+          else
+            WEB_DIR="."
+          fi
+          
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+          npx cap init "AppStudio" "com.app.studio" --web-dir "$WEB_DIR"
+          npx cap add android
+          npx cap sync android
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: gradle
 
       - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+        run: chmod +x android/gradlew
 
       - name: Build Debug APK
-        run: ./gradlew assembleDebug --stacktrace
+        run: |
+          cd android
+          ./gradlew assembleDebug --stacktrace
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          path: android/app/build/outputs/apk/debug/*.apk
