@@ -7,7 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.ViewModelProvider
 import com.example.data.AppDatabase
 import com.example.data.ShoppingRepository
-import com.example.ui.EloraApp
+import com.example.ui.ComprasApp
 import com.example.ui.ShoppingViewModel
 import com.example.ui.ShoppingViewModelFactory
 import com.example.ui.theme.MyApplicationTheme
@@ -25,7 +25,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MyApplicationTheme {
-                EloraApp(viewModel = viewModel)
+                ComprasApp(viewModel = viewModel)
             }
         }
     }

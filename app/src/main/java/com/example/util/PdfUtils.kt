@@ -24,7 +24,7 @@ object PdfUtils {
         paint.color = Color.BLACK
         paint.textSize = 20f
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        canvas.drawText("Lista de Compras - Grupo Elora", 40f, 50f, paint)
+        canvas.drawText("Lista de Compras Mercado", 40f, 50f, paint)
 
         // Draw Table Header
         paint.textSize = 12f

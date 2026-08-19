@@ -1,6 +1,6 @@
 {
-  "name": "Elora Compras",
-  "description": "Modelo de CRM e Gestão de Lista de Compras para o Grupo Elora.",
+  "name": "Lista de Compras Mercado",
+  "description": "App de gerenciamento de lista de compras.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

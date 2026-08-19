@@ -19,10 +19,10 @@ class ShoppingViewModel(private val repository: ShoppingRepository) : ViewModel(
     val shoppingList: StateFlow<List<ShoppingItemWithProduct>> = repository.shoppingList
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-    fun addProduct(name: String, unit: String, price: Double) {
+    fun addProduct(name: String, unit: String, price: Double, category: String) {
         viewModelScope.launch {
             if (name.isNotBlank()) {
-                repository.addProduct(name, unit, price)
+                repository.addProduct(name, unit, price, category)
             }
         }
     }

@@ -8,6 +8,7 @@ data class Product(
     val id: Long = 0,
     val name: String,
     val unit: String = "un",
+    val category: String = "Geral",
     val lastPrice: Double = 0.0,
     val totalQuantityBought: Int = 0,
     val timesBought: Int = 0,

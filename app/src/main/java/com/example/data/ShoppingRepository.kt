@@ -6,8 +6,8 @@ class ShoppingRepository(private val dao: ShoppingDao) {
     val allProducts: Flow<List<Product>> = dao.getAllProducts()
     val shoppingList: Flow<List<ShoppingItemWithProduct>> = dao.getShoppingList()
 
-    suspend fun addProduct(name: String, unit: String, price: Double) {
-        dao.insertProduct(Product(name = name, unit = unit, lastPrice = price))
+    suspend fun addProduct(name: String, unit: String, price: Double, category: String) {
+        dao.insertProduct(Product(name = name, unit = unit, lastPrice = price, category = category))
     }
 
     suspend fun addShoppingItem(product: Product) {

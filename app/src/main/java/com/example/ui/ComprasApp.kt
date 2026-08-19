@@ -18,7 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun EloraApp(viewModel: ShoppingViewModel) {
+fun ComprasApp(viewModel: ShoppingViewModel) {
     var selectedTabIndex by remember { mutableStateOf(0) }
 
     val products by viewModel.products.collectAsState()
