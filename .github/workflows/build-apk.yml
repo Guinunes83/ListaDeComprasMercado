@@ -18,27 +18,49 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install Dependencies and Build Web Assets
+      - name: Prepare Project and Build Web Assets
         run: |
-          npm install
-          npm run build --if-present
+          # Se existir package.json em alguma subpasta, entra nela e faz o build
+          PKG_PATH=$(find . -maxdepth 3 -name "package.json" -not -path "*/node_modules/*" | head -n 1)
+          
+          if [ -n "$PKG_PATH" ]; then
+            DIR=$(dirname "$PKG_PATH")
+            echo "Encontrado package.json no diretório: $DIR"
+            cd "$DIR"
+            npm install
+            npm run build --if-present
+            cd "$GITHUB_WORKSPACE"
+          else
+            echo "Nenhum package.json encontrado. Criando ambiente padrão..."
+            npm init -y
+          fi
 
       - name: Setup Android Wrapper (Capacitor)
         run: |
-          # Determina a pasta de saída do build (dist, build ou a própria raiz)
-          WEB_DIR="dist"
+          # Identifica onde estão os arquivos HTML/JS finais
           if [ -d "dist" ]; then
             WEB_DIR="dist"
           elif [ -d "build" ]; then
             WEB_DIR="build"
           elif [ -d "public" ]; then
             WEB_DIR="public"
-          else
+          elif [ -f "index.html" ]; then
             WEB_DIR="."
+          else
+            # Procura a pasta que contém o index.html
+            HTML_PATH=$(find . -maxdepth 3 -name "index.html" -not -path "*/node_modules/*" -not -path "*/.github/*" | head -n 1)
+            if [ -n "$HTML_PATH" ]; then
+              WEB_DIR=$(dirname "$HTML_PATH")
+            else
+              WEB_DIR="."
+            fi
           fi
           
+          echo "Utilizando diretório web: $WEB_DIR"
+
+          # Inicializa o Capacitor na raiz
           npm install @capacitor/core @capacitor/cli @capacitor/android
-          npx cap init "AppStudio" "com.app.studio" --web-dir "$WEB_DIR"
+          npx cap init "ListaDeCompras" "com.app.listadecompras" --web-dir "$WEB_DIR"
           npx cap add android
           npx cap sync android
 
@@ -59,5 +81,5 @@ jobs:
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug-apk
+          name: ListaDeCompras-APK
           path: android/app/build/outputs/apk/debug/*.apk
