@@ -1,4 +1,4 @@
-name: Build APK from Web App
+name: Build Native Android APK
 
 on:
   push:
@@ -13,76 +13,27 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Build Web Application
-        run: |
-          # Procura onde está o package.json (se existir)
-          PKG_PATH=$(find . -name "package.json" -not -path "*/node_modules/*" | head -n 1)
-
-          if [ -n "$PKG_PATH" ]; then
-            APP_DIR=$(dirname "$PKG_PATH")
-            echo "Pasta do projeto encontrada: $APP_DIR"
-            cd "$APP_DIR"
-            npm install
-            npm run build --if-present
-            cd "$GITHUB_WORKSPACE"
-          fi
-
-      - name: Locate and Prepare Web Assets
-        run: |
-          mkdir -p www_build
-
-          # 1. Procura pastas de build prontas (dist, build, out) que contenham index.html
-          BUILD_DIR=$(find . -type d \( -name "dist" -o -name "build" -o -name "out" \) -not -path "*/node_modules/*" -not -path "*/www_build/*" -exec test -f '{}/index.html' \; -print | head -n 1)
-
-          if [ -n "$BUILD_DIR" ]; then
-            echo "Encontrada pasta de saída compilada: $BUILD_DIR"
-            cp -r "$BUILD_DIR"/* www_build/
-          else
-            # 2. Se não achou pasta dist/build, procura qualquer index.html no projeto
-            HTML_FILE=$(find . -name "index.html" -not -path "*/node_modules/*" -not -path "*/www_build/*" | head -n 1)
-            if [ -n "$HTML_FILE" ]; then
-              SRC_DIR=$(dirname "$HTML_FILE")
-              echo "Copiando arquivos a partir de: $SRC_DIR"
-              cp -r "$SRC_DIR"/* www_build/
-            else
-              echo "ERRO: Nenhum index.html foi localizado no repositório!"
-              exit 1
-            fi
-          fi
-
-          # Garante package.json na raiz para o Capacitor
-          if [ ! -f "package.json" ]; then
-            npm init -y
-          fi
-
-      - name: Setup Android Wrapper (Capacitor)
-        run: |
-          npm install @capacitor/core @capacitor/cli @capacitor/android
-          npx cap init "ListaDeCompras" "com.app.listadecompras" --web-dir "www_build"
-          npx cap add android
-          npx cap sync android
-
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x android/gradlew
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
 
       - name: Build Debug APK
         run: |
-          cd android
-          ./gradlew assembleDebug --stacktrace
+          # Se o gradlew existir, usa ele; senão, usa o Gradle instalado na máquina virtual
+          if [ -f "gradlew" ]; then
+            chmod +x gradlew
+            ./gradlew assembleDebug --stacktrace
+          else
+            gradle assembleDebug --stacktrace
+          fi
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ListaDeCompras-APK
-          path: android/app/build/outputs/apk/debug/*.apk
+          path: app/build/outputs/apk/debug/*.apk
