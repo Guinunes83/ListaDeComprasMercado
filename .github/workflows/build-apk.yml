@@ -18,24 +18,44 @@ jobs:
         with:
           node-version: 20
 
-      - name: Prepare Web Assets in Dedicated Folder
+      - name: Build Web Application
         run: |
-          # 1. Cria a pasta www exigida pelo Capacitor
-          mkdir -p www_build
+          # Procura onde está o package.json (se existir)
+          PKG_PATH=$(find . -name "package.json" -not -path "*/node_modules/*" | head -n 1)
 
-          # 2. Se houver build (dist/build), copia dela; senão, copia os arquivos da raiz
-          if [ -d "dist" ]; then
-            cp -r dist/* www_build/
-          elif [ -d "build" ]; then
-            cp -r build/* www_build/
-          elif [ -d "public" ]; then
-            cp -r public/* www_build/
-          else
-            # Copia todos os arquivos HTML, JS, CSS, imagens e pastas para www_build
-            rsync -av --exclude='node_modules' --exclude='.git' --exclude='.github' --exclude='www_build' ./ www_build/
+          if [ -n "$PKG_PATH" ]; then
+            APP_DIR=$(dirname "$PKG_PATH")
+            echo "Pasta do projeto encontrada: $APP_DIR"
+            cd "$APP_DIR"
+            npm install
+            npm run build --if-present
+            cd "$GITHUB_WORKSPACE"
           fi
 
-          # Garante que um package.json exista para o Capacitor
+      - name: Locate and Prepare Web Assets
+        run: |
+          mkdir -p www_build
+
+          # 1. Procura pastas de build prontas (dist, build, out) que contenham index.html
+          BUILD_DIR=$(find . -type d \( -name "dist" -o -name "build" -o -name "out" \) -not -path "*/node_modules/*" -not -path "*/www_build/*" -exec test -f '{}/index.html' \; -print | head -n 1)
+
+          if [ -n "$BUILD_DIR" ]; then
+            echo "Encontrada pasta de saída compilada: $BUILD_DIR"
+            cp -r "$BUILD_DIR"/* www_build/
+          else
+            # 2. Se não achou pasta dist/build, procura qualquer index.html no projeto
+            HTML_FILE=$(find . -name "index.html" -not -path "*/node_modules/*" -not -path "*/www_build/*" | head -n 1)
+            if [ -n "$HTML_FILE" ]; then
+              SRC_DIR=$(dirname "$HTML_FILE")
+              echo "Copiando arquivos a partir de: $SRC_DIR"
+              cp -r "$SRC_DIR"/* www_build/
+            else
+              echo "ERRO: Nenhum index.html foi localizado no repositório!"
+              exit 1
+            fi
+          fi
+
+          # Garante package.json na raiz para o Capacitor
           if [ ! -f "package.json" ]; then
             npm init -y
           fi
