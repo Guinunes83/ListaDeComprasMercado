@@ -18,49 +18,32 @@ jobs:
         with:
           node-version: 20
 
-      - name: Prepare Project and Build Web Assets
+      - name: Prepare Web Assets in Dedicated Folder
         run: |
-          # Se existir package.json em alguma subpasta, entra nela e faz o build
-          PKG_PATH=$(find . -maxdepth 3 -name "package.json" -not -path "*/node_modules/*" | head -n 1)
-          
-          if [ -n "$PKG_PATH" ]; then
-            DIR=$(dirname "$PKG_PATH")
-            echo "Encontrado package.json no diretório: $DIR"
-            cd "$DIR"
-            npm install
-            npm run build --if-present
-            cd "$GITHUB_WORKSPACE"
+          # 1. Cria a pasta www exigida pelo Capacitor
+          mkdir -p www_build
+
+          # 2. Se houver build (dist/build), copia dela; senão, copia os arquivos da raiz
+          if [ -d "dist" ]; then
+            cp -r dist/* www_build/
+          elif [ -d "build" ]; then
+            cp -r build/* www_build/
+          elif [ -d "public" ]; then
+            cp -r public/* www_build/
           else
-            echo "Nenhum package.json encontrado. Criando ambiente padrão..."
+            # Copia todos os arquivos HTML, JS, CSS, imagens e pastas para www_build
+            rsync -av --exclude='node_modules' --exclude='.git' --exclude='.github' --exclude='www_build' ./ www_build/
+          fi
+
+          # Garante que um package.json exista para o Capacitor
+          if [ ! -f "package.json" ]; then
             npm init -y
           fi
 
       - name: Setup Android Wrapper (Capacitor)
         run: |
-          # Identifica onde estão os arquivos HTML/JS finais
-          if [ -d "dist" ]; then
-            WEB_DIR="dist"
-          elif [ -d "build" ]; then
-            WEB_DIR="build"
-          elif [ -d "public" ]; then
-            WEB_DIR="public"
-          elif [ -f "index.html" ]; then
-            WEB_DIR="."
-          else
-            # Procura a pasta que contém o index.html
-            HTML_PATH=$(find . -maxdepth 3 -name "index.html" -not -path "*/node_modules/*" -not -path "*/.github/*" | head -n 1)
-            if [ -n "$HTML_PATH" ]; then
-              WEB_DIR=$(dirname "$HTML_PATH")
-            else
-              WEB_DIR="."
-            fi
-          fi
-          
-          echo "Utilizando diretório web: $WEB_DIR"
-
-          # Inicializa o Capacitor na raiz
           npm install @capacitor/core @capacitor/cli @capacitor/android
-          npx cap init "ListaDeCompras" "com.app.listadecompras" --web-dir "$WEB_DIR"
+          npx cap init "ListaDeCompras" "com.app.listadecompras" --web-dir "www_build"
           npx cap add android
           npx cap sync android
 
