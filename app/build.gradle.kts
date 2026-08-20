@@ -133,3 +133,4 @@ dependencies {
   "ksp"(libs.androidx.room.compiler)
   "ksp"(libs.moshi.kotlin.codegen)
 }
+// Forçando nova leitura do Actions para o Kotlin 2.0
