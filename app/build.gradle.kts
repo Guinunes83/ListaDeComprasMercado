@@ -3,7 +3,6 @@ import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesS
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.kotlin.android)
-  alias(libs.plugins.kotlin.compose)
   alias(libs.plugins.google.devtools.ksp)
   alias(libs.plugins.roborazzi)
   alias(libs.plugins.secrets)
@@ -59,6 +58,10 @@ android {
     buildConfig = true
   }
   
+  composeOptions {
+    kotlinCompilerExtensionVersion = "1.5.14"
+  }
+  
   testOptions { 
     unitTests { isIncludeAndroidResources = true } 
   }
@@ -69,14 +72,6 @@ android {
   }
 }
 
-kotlin {
-    jvmToolchain(17)
-    compilerOptions {
-        languageVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_0)
-    }
-}
-
-// Configure the Secrets Gradle Plugin to use .env and .env.example files
 secrets {
   propertiesFileName = ".env"
   defaultPropertiesFileName = ".env.example"
@@ -133,4 +128,3 @@ dependencies {
   "ksp"(libs.androidx.room.compiler)
   "ksp"(libs.moshi.kotlin.codegen)
 }
-// Forçando nova leitura do Actions para o Kotlin 2.0
