@@ -30,9 +30,9 @@ jobs:
         run: |
           if [ -f "gradlew" ]; then
             chmod +x gradlew
-            ./gradlew clean assembleDebug --no-configuration-cache --stacktrace
+            ./gradlew clean assembleDebug --no-configuration-cache --info --stacktrace
           else
-            gradle clean assembleDebug --no-configuration-cache --stacktrace
+            gradle clean assembleDebug --no-configuration-cache --info --stacktrace
           fi
 
       - name: Upload APK Artifact
